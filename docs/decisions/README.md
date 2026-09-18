@@ -29,3 +29,4 @@ Accepted / Superseded
 ## Decisions
 
 - [0001. 出欠は選手（Player）に紐付ける](0001-attendance-belongs-to-player.md)
+- [0002. 選手名簿は指導者が管理し、家庭は招待コードで参加する](0002-coach-managed-roster-with-invite-codes.md)

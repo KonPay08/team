@@ -3,9 +3,9 @@ import { needsAnswer, statusOf, summarizeEvent } from './summary'
 import type { Player, PlayerAttendance } from '~/features/team/types'
 
 const players: Array<Player> = [
-  { id: 'p1', name: 'A', grade: 6 },
-  { id: 'p2', name: 'B', grade: 5 },
-  { id: 'p3', name: 'C', grade: 4 },
+  { id: 'p1', name: 'A', grade: 6, inviteCode: 'AAA111' },
+  { id: 'p2', name: 'B', grade: 5, inviteCode: 'BBB222' },
+  { id: 'p3', name: 'C', grade: 4, inviteCode: 'CCC333' },
 ]
 
 const attendances: Array<PlayerAttendance> = [

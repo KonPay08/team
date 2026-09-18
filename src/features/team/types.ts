@@ -8,6 +8,8 @@ export type Player = {
   id: string
   name: string
   grade: number
+  /** 保護者・本人がこの選手に紐付くための招待コード。指導者が発行する。 */
+  inviteCode: string
 }
 
 export type User = {

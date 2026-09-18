@@ -8,6 +8,8 @@ import type {
 
 export type Store = {
   teamName: string
+  /** 指導者・スタッフが参加するためのチーム共通コード。 */
+  staffInviteCode: string
   players: Array<Player>
   users: Array<User>
   events: Array<TeamEvent>
@@ -24,11 +26,11 @@ function dateAfter(days: number): string {
 
 function seed(): Store {
   const players: Array<Player> = [
-    { id: 'p1', name: '田中 蓮', grade: 6 },
-    { id: 'p2', name: '佐藤 大翔', grade: 6 },
-    { id: 'p3', name: '鈴木 陽菜', grade: 5 },
-    { id: 'p4', name: '高橋 悠真', grade: 4 },
-    { id: 'p5', name: '田中 陽向', grade: 3 },
+    { id: 'p1', name: '田中 蓮', grade: 6, inviteCode: 'REN001' },
+    { id: 'p2', name: '佐藤 大翔', grade: 6, inviteCode: 'HRT002' },
+    { id: 'p3', name: '鈴木 陽菜', grade: 5, inviteCode: 'HNA003' },
+    { id: 'p4', name: '高橋 悠真', grade: 4, inviteCode: 'YUM004' },
+    { id: 'p5', name: '田中 陽向', grade: 3, inviteCode: 'HNT005' },
   ]
 
   const users: Array<User> = [
@@ -85,6 +87,7 @@ function seed(): Store {
 
   return {
     teamName: 'みどり台ジュニアベースボールクラブ',
+    staffInviteCode: 'STAFF1',
     players,
     users,
     events,
@@ -113,4 +116,19 @@ export function resetStore(): Store {
 
 export function nextId(prefix: string): string {
   return `${prefix}${Math.random().toString(36).slice(2, 8)}`
+}
+
+const codeChars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+
+export function nextInviteCode(): string {
+  const store = getStore()
+  for (;;) {
+    const code = Array.from(
+      { length: 6 },
+      () => codeChars[Math.floor(Math.random() * codeChars.length)],
+    ).join('')
+    const taken =
+      code === store.staffInviteCode || store.players.some((p) => p.inviteCode === code)
+    if (!taken) return code
+  }
 }

@@ -25,7 +25,7 @@ function Home() {
       <Card>
         <h1 className="text-xl font-bold">ようこそ</h1>
         <p className="mt-2 text-sm text-slate-600">
-          はじめに、あなたが誰かを設定します。保護者の場合はお子さんを選ぶだけで準備完了です。
+          指導者から届いた招待コードを入力すると、お子さんと紐付いて準備完了です。
         </p>
         <Link
           to="/setup"
@@ -52,12 +52,20 @@ function Home() {
           </p>
         </div>
         {currentUser.role === 'coach' ? (
-          <Link
-            to="/events/new"
-            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
-          >
-            イベント作成
-          </Link>
+          <div className="flex shrink-0 gap-2">
+            <Link
+              to="/roster"
+              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700"
+            >
+              名簿と招待
+            </Link>
+            <Link
+              to="/events/new"
+              className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
+            >
+              イベント作成
+            </Link>
+          </div>
         ) : null}
       </div>
 

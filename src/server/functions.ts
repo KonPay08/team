@@ -1,5 +1,5 @@
 import { createServerFn } from '@tanstack/react-start'
-import { getStore, nextId, resetStore } from '~/server/store'
+import { getStore, nextId, nextInviteCode, resetStore } from '~/server/store'
 import type {
   AttendanceStatus,
   EventType,
@@ -13,6 +13,7 @@ import type {
 
 export type TeamSnapshot = {
   teamName: string
+  staffInviteCode: string
   currentUser: User | null
   users: Array<User>
   players: Array<Player>
@@ -28,6 +29,7 @@ function snapshot(): TeamSnapshot {
   )
   return {
     teamName: store.teamName,
+    staffInviteCode: store.staffInviteCode,
     currentUser: store.users.find((u) => u.id === store.currentUserId) ?? null,
     users: store.users,
     players: store.players,
@@ -57,43 +59,59 @@ export const resetTeam = createServerFn({ method: 'POST' }).handler(async () => 
   return snapshot()
 })
 
-export type NewMemberInput = {
+export type JoinInput = {
+  /** 指導者が発行した招待コード（選手ごと、またはスタッフ共通） */
+  code: string
   name: string
-  role: Role
-  /** 既存選手との紐付け */
-  playerIds: Array<string>
-  /** 新規に登録する子/自分 */
-  newPlayers: Array<{ name: string; grade: number }>
+  /** 選手コードで参加するとき、保護者として参加するか本人として参加するか */
+  as: 'parent' | 'player'
 }
 
-export const registerMember = createServerFn({ method: 'POST' })
-  .validator((data: NewMemberInput) => data)
-  .handler(async ({ data }) => {
+export type JoinResult = { ok: false; message: string } | { ok: true; snapshot: TeamSnapshot }
+
+/**
+ * 招待コードでチームに参加する。選手の新規作成は行わないため、
+ * 父・母が別々に参加しても同じPlayerに紐付き、選手が重複しない。
+ */
+export const joinTeam = createServerFn({ method: 'POST' })
+  .validator((data: JoinInput) => data)
+  .handler(async ({ data }): Promise<JoinResult> => {
     const store = getStore()
-    const createdIds = data.newPlayers
-      .filter((p) => p.name.trim() !== '')
-      .map((p) => {
-        const player: Player = { id: nextId('p'), name: p.name.trim(), grade: p.grade }
-        store.players.push(player)
-        return player.id
-      })
-    const user: User = {
-      id: nextId('u'),
-      name: data.name.trim(),
-      role: data.role,
-      playerIds: [...new Set([...data.playerIds, ...createdIds])],
+    const name = data.name.trim()
+    if (name === '') return { ok: false, message: '名前を入力してください' }
+
+    const code = data.code.trim().toUpperCase()
+    if (code === store.staffInviteCode) {
+      const coach: User = { id: nextId('u'), name, role: 'coach', playerIds: [] }
+      store.users.push(coach)
+      store.currentUserId = coach.id
+      return { ok: true, snapshot: snapshot() }
     }
+
+    const player = store.players.find((p) => p.inviteCode === code)
+    if (!player) {
+      return { ok: false, message: '招待コードが見つかりません。指導者に確認してください' }
+    }
+
+    const role: Role = data.as
+    const user: User = { id: nextId('u'), name, role, playerIds: [player.id] }
     store.users.push(user)
     store.currentUserId = user.id
-    return snapshot()
+    return { ok: true, snapshot: snapshot() }
   })
 
-export const linkPlayers = createServerFn({ method: 'POST' })
-  .validator((data: { userId: string; playerIds: Array<string> }) => data)
+/** 選手の登録は指導者のみが行う（名簿はチームの資産）。 */
+export const addPlayer = createServerFn({ method: 'POST' })
+  .validator((data: { name: string; grade: number }) => data)
   .handler(async ({ data }) => {
     const store = getStore()
-    const user = store.users.find((u) => u.id === data.userId)
-    if (user) user.playerIds = data.playerIds
+    const player: Player = {
+      id: nextId('p'),
+      name: data.name.trim(),
+      grade: data.grade,
+      inviteCode: nextInviteCode(),
+    }
+    store.players.push(player)
     return snapshot()
   })
 
