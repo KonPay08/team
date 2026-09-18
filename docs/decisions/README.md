@@ -28,4 +28,4 @@ Accepted / Superseded
 
 ## Decisions
 
-（まだ記録なし）
+- [0001. 出欠は選手（Player）に紐付ける](0001-attendance-belongs-to-player.md)
